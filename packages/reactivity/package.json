@@ -1,0 +1,8 @@
+{
+  "name": "@my-vue3/reactivity",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
