@@ -1,1 +1,1 @@
-export const name = 123
+export { reactive, effect } from '@my-vue3/reactivity'
