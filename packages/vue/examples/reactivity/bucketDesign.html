@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <script src="../../dist/vue.js"></script>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="../../dist/vue.js"></script>
+  <style>
+  </style>
 </head>
 <body>
 
@@ -14,10 +16,13 @@
       name: 'echo',
     })
     effect(() => {
+      // 打印两次
+      console.log('effect run')
       document.body.innerText = obj.name
     })
     setTimeout(() => {
-      obj.name = 'yahah'
+      // 副作用函数并没有对此属性进行读取
+      obj.name = 'hello yahaha'
     }, 2000)
 </script>
 </html>

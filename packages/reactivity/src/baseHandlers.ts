@@ -1,20 +1,17 @@
-import { activeEffect } from './effect'
-import { reactiveSet } from './reactive'
+import { track, trigger } from './effect'
 
 const get = createGetter()
 const set = createSetter()
 function createGetter() {
   return function get(target: Record<string, any>, key: string) {
-    // 将activeEffect中存储的副作用函数收集到桶中
-    if (activeEffect)
-      reactiveSet.add(activeEffect)
+    track(target, key)
     return target[key]
   }
 }
 function createSetter() {
   return function set(target: Record<string, any>, key: string, newValue: unknown) {
     target[key] = newValue
-    reactiveSet.forEach(fn => fn())
+    trigger(target, key)
     return true
   }
 }
