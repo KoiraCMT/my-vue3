@@ -1,43 +1,73 @@
 import type { Dep } from './dep'
+import { createDep } from './dep'
 type KeyToDepMap = Map<any, Dep>
 // 存储副作用的容器
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
-export let activeEffect: undefined | (() => any)
+export let activeEffect: ReactiveEffect | undefined
+
+export class ReactiveEffect<T = any> {
+  // 用于存储所有与该副作用函数相关联的依赖集合
+  deps: Dep[] = []
+
+  constructor(public fn: () => T) {
+  }
+
+  run() {
+    // 调用cleanupEffect函数完成清除工作
+    cleanupEffect(this)
+    activeEffect = this!
+    return this.fn()
+  }
+}
+
+function cleanupEffect(effect: ReactiveEffect) {
+  const { deps } = effect
+  if (deps.length) {
+    for (let i = 0; i < deps.length; i++)
+      deps[i].delete(effect)
+
+    deps.length = 0
+  }
+}
 
 // 用于注册副作用函数
-export function effect(fn: () => any) {
-  // 当调用effect注册副作用函数时，将fn赋值给activeEffect
-  activeEffect = fn
-  // 执行副作用函数
-  fn()
+export function effect<T = any>(fn: () => T) {
+  const _effect = new ReactiveEffect(fn)
+  _effect.run()
 }
 
 export function track(target: object, key: unknown) {
   if (!activeEffect)
     return
-  // 根据target从桶中获取depsMap, 它也是一个Map类型：key -> effects
   let depsMap = targetMap.get(target)
-  // 如果不存在depsMap，则新建一个Map与target关联
   if (!depsMap)
     targetMap.set(target, (depsMap = new Map()))
-  // 再根据key从depsMap中取得deps，它是一个Set类型
-  // 用于存储当前key关联的副作用函数effects
-  let deps = depsMap.get(key as string)
-  // 如果不存在就新建一个Set与key关联
-  if (!deps)
-    depsMap.set(key as string, (deps = new Set()))
+  let dep = depsMap.get(key as string)
+  if (!dep)
+    depsMap.set(key as string, (dep = createDep())) // 修改
+  trackEffects(dep)
+}
+
+export function trackEffects(dep: Dep) {
   // 将当前激活的副作用函数收集到桶中
-  deps.add(activeEffect)
+  dep.add(activeEffect!)
+  // dep就是一个与当前副作用函数存在联系的依赖集合
+  // 将其添加到activeEffect.deps数组中
+  activeEffect!.deps.push(dep)
 }
 
 export function trigger(target: object, key: unknown) {
-  // 根据target从桶中获取depsMap
   const depsMap = targetMap.get(target)
   if (!depsMap)
     return
-  // 根据key获取所有的副作用函数
-  const effects = depsMap.get(key as string)
-  // 执行副作用函数
-  effects && effects.forEach(fn => fn())
+  // 修改
+  const deps = depsMap.get(key as string)
+  // 新增
+  const effects: ReactiveEffect[] = []
+  deps?.forEach((dep) => {
+    if (dep)
+      effects.push(dep)
+  })
+  effects.forEach(effect => effect.run())
 }
