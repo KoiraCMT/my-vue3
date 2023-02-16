@@ -10,14 +10,28 @@ export class ReactiveEffect<T = any> {
   // 用于存储所有与该副作用函数相关联的依赖集合
   deps: Dep[] = []
 
-  constructor(public fn: () => T) {
-  }
+  // 将外层的副作用函数存储，如果是第一层，则为undefined
+  parent: ReactiveEffect | undefined = undefined
+
+  constructor(public fn: () => T) {}
 
   run() {
-    // 调用cleanupEffect函数完成清除工作
-    cleanupEffect(this)
-    activeEffect = this!
-    return this.fn()
+    try {
+      // 将外层副作用函数存储到parent属性中，相当于压栈操作
+      this.parent = activeEffect
+      // 将副作用函数赋值给activeEffect, 相当于将当前副作用函数放到栈顶
+      activeEffect = this!
+
+      cleanupEffect(this)
+
+      return this.fn()
+    }
+    finally {
+      // 副作用函数执行完毕后，将外层副作用函数赋值给activeEffect，相当于将当前副作用函数弹出栈并修改栈顶
+      activeEffect = this.parent
+      // 弹出后断绝与外层副作用函数的关联
+      this.parent = undefined
+    }
   }
 }
 
