@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="../../dist/vue.js"></script>
+  <style>
+  </style>
+</head>
+<body>
+
+</body>
+<script>
+  const { reactive, effect } = Vue
+  const obj = reactive({
+    num: 1,
+  })
+  effect(() => {
+    obj.num = obj.num + 1
+    effect(() => {
+      obj.num = obj.num + 1
+    })
+  })
+  console.log(obj.num)
+  </script>
+</html>

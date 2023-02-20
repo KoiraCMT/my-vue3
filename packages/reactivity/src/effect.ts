@@ -16,6 +16,15 @@ export class ReactiveEffect<T = any> {
   constructor(public fn: () => T) {}
 
   run() {
+    // 默认activeEffect，用于判断是否引发了无限递归循环
+    let parent: ReactiveEffect | undefined = activeEffect
+    while (parent) {
+      // 如果当前执行的副作用函数更底层的副作用函数与当前执行的函数相同，则不执行，从而打断无限递归循环
+      if (parent === this)
+        return
+      // 结合effect栈，追溯当前执行的副作用函数更底层的副作用函数
+      parent = parent.parent
+    }
     try {
       // 将外层副作用函数存储到parent属性中，相当于压栈操作
       this.parent = activeEffect
