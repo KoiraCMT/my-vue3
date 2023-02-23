@@ -1,1 +1,1 @@
-export { reactive, effect } from '@my-vue3/reactivity'
+export { reactive, effect, scheduler } from '@my-vue3/reactivity'

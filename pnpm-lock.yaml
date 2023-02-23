@@ -6,6 +6,7 @@ importers:
     specifiers:
       '@antfu/eslint-config': ^0.35.1
       '@my-vue3/reactivity': workspace:*
+      '@my-vue3/share': workspace:^1.0.0
       '@my-vue3/vue': workspace:*
       '@rollup/plugin-commonjs': ^24.0.1
       '@rollup/plugin-node-resolve': ^15.0.1
@@ -16,6 +17,7 @@ importers:
       typescript: ^4.9.5
     dependencies:
       '@my-vue3/reactivity': link:packages/reactivity
+      '@my-vue3/share': link:packages/shared
       '@my-vue3/vue': link:packages/vue
     devDependencies:
       '@antfu/eslint-config': 0.35.1_4vsywjlpuriuw3tl5oq6zy5a64

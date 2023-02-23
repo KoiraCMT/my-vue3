@@ -1,8 +1,11 @@
+import { extend } from '@my-vue3/shared'
 import type { Dep } from './dep'
 import { createDep } from './dep'
 type KeyToDepMap = Map<any, Dep>
 // 存储副作用的容器
 const targetMap = new WeakMap<any, KeyToDepMap>()
+
+export type EffectScheduler = (...args: any[]) => any
 
 export let activeEffect: ReactiveEffect | undefined
 
@@ -13,7 +16,10 @@ export class ReactiveEffect<T = any> {
   // 将外层的副作用函数存储，如果是第一层，则为undefined
   parent: ReactiveEffect | undefined = undefined
 
-  constructor(public fn: () => T) {}
+  constructor(
+    public fn: () => T,
+    public scheduler: EffectScheduler | null = null,
+  ) {}
 
   run() {
     // 默认activeEffect，用于判断是否引发了无限递归循环
@@ -54,9 +60,17 @@ function cleanupEffect(effect: ReactiveEffect) {
   }
 }
 
+export interface ReactiveEffectOptions {
+  scheduler?: EffectScheduler
+}
+
 // 用于注册副作用函数
-export function effect<T = any>(fn: () => T) {
+export function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions) {
   const _effect = new ReactiveEffect(fn)
+
+  if (options)
+    extend(_effect, options)
+
   _effect.run()
 }
 
@@ -92,5 +106,12 @@ export function trigger(target: object, key: unknown) {
     if (dep)
       effects.push(dep)
   })
-  effects.forEach(effect => effect.run())
+  effects.forEach(effect => triggerEffect(effect))
+}
+
+export function triggerEffect(effect: ReactiveEffect) {
+  if (effect.scheduler)
+    effect.scheduler()
+  else
+    effect.run()
 }
