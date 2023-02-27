@@ -62,6 +62,7 @@ function cleanupEffect(effect: ReactiveEffect) {
 
 export interface ReactiveEffectOptions {
   scheduler?: EffectScheduler
+  lazy?: boolean
 }
 
 // 用于注册副作用函数
@@ -70,8 +71,10 @@ export function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions) {
 
   if (options)
     extend(_effect, options)
+  if (!options || !options.lazy)
+    _effect.run()
 
-  _effect.run()
+  return _effect.run.bind(_effect)
 }
 
 export function track(target: object, key: unknown) {
